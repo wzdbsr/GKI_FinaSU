@@ -385,6 +385,24 @@ jobs:
           echo "NAME_SUBLEVEL=$NAME_SUBLEVEL" >> $GITHUB_ENV
 
       # 以同步后的实际 SUBLEVEL 判断，避免对已包含上游修复的 LTS 重复打补丁
+      - name: 自动应用 Unicode-bypass 零宽字符漏洞补丁
+        if: inputs.unicode_bypass_patch
+        working-directory: ${{ env.KERNEL_ROOT }}/common
+        run: |
+          if ! patch -p1 < "${{ github.workspace }}/security_patch/unicode-bypass_fix_5.10-6.12通用.patch"; then
+            if [ "${SKIP_INCOMPATIBLE}" = "true" ]; then
+              echo "::warning title=Unicode-bypass 已跳过::补丁应用失败(可能不兼容当前内核子版本)，已跳过该功能继续构建"
+              if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+                echo "" >> "$GITHUB_STEP_SUMMARY"
+                echo "⚠️ **Unicode-bypass 修复链** 已自动跳过：补丁应用失败（可能不兼容当前内核子版本）（构建未中断）" >> "$GITHUB_STEP_SUMMARY"
+              fi
+              echo "UNICODE_BYPASS_SKIPPED=true" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            echo "::error::Unicode-bypass 补丁应用失败"
+            exit 1
+          fi
+ 
       - name: 自动应用 CVE-2026-43499 rtmutex 修复链
         if: inputs.cve_2026_43499_patch
         working-directory: ${{ env.KERNEL_ROOT }}/common
