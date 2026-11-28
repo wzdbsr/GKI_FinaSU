@@ -83,6 +83,11 @@ on:
         required: true
         type: boolean
         default: false
+      unicode_bypass_patch:
+        description: "应用 Unicode-bypass 零宽字符漏洞补丁"
+        required: false
+        type: boolean
+        default: false
       use_rekernel:
         description: "启用 Re-Kernel 驱动"
         required: false
